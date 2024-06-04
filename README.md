@@ -24,29 +24,6 @@ The entire process operates seamlessly on the user's mobile device. When the app
 
 - Navigation Assistance: Future functionalities may include obstacle detection and path guidance to further aid in navigation.
 
-## Installation
-
-To install and run the application, follow these steps:
-
-- Clone the repository:
-
-git clone https://github.com/NadeeTharuka/pathfinder.git
-
-- Navigate to the project directory:
-
-cd pathfinder
-
-- Install the required dependencies:
-
-npm install
-
-- Set up the server for object recognition analysis:
-
-Instructions for setting up the server can be found in the server/README.md file.
-
-- Run the application:
-
-npm start
 
 ## Usage
 
