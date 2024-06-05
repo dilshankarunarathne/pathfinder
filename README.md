@@ -53,6 +53,10 @@ Several studies have proposed the use of smartphone-based systems that utilize t
 
 The development of real-time object recognition and navigation assistance systems using mobile applications holds significant promise for improving the quality of life for visually impaired individuals. Advances in AI and mobile technology have enabled the creation of innovative solutions that offer real-time feedback and guidance. However, ongoing research and development are necessary to address the challenges and enhance the effectiveness and usability of these systems. By leveraging emerging technologies and user-centered design principles, future systems can provide more reliable and intuitive assistance to the blind community.
 
+
+![]()
+
+
 ## Contributing
 Contributions are welcome! Please read the contribution guidelines for more information.
 
