@@ -8,7 +8,7 @@ This project proposes the development of a mobile application designed to levera
 
 The primary goal is to develop a user-friendly and accessible mobile application that empowers visually impaired individuals by providing real-time object recognition and navigation assistance. The app will offer audio descriptions of objects in the user's environment, aiding in safe and independent navigation.
 
-![](https://github.com/NadeeTharuka/pathfinder/blob/main/Blind%20app.drawio%20Light.png)
+![System Architecture](https://github.com/NadeeTharuka/pathfinder/blob/main/Blind%20app.drawio%20Light.png)
 
 ## Object Recognition Technologies
 
