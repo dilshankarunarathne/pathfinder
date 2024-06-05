@@ -9,6 +9,7 @@ This project proposes the development of a mobile application designed to levera
 The primary goal is to develop a user-friendly and accessible mobile application that empowers visually impaired individuals by providing real-time object recognition and navigation assistance. The app will offer audio descriptions of objects in the user's environment, aiding in safe and independent navigation.
 
 ## System Architecture
+The system architecture for the Real-Time Object Recognition and Navigation Assistance for the Blind consists of a mobile application integrated with computer vision and object recognition technology. The user's smartphone captures live video using the camera, which is then streamed to a server for processing. The server employs advanced object recognition algorithms to analyze the video and identify objects in real time. Recognized objects are transmitted back to the mobile application, where text-to-speech functionality provides audio descriptions to the user. This architecture ensures efficient real-time processing, delivering immediate and accurate navigation assistance to enhance the independence and safety of blind users.
 ![System Architecture](https://github.com/NadeeTharuka/pathfinder/blob/main/Blind%20app.drawio%20Light.png)
 
 ## Object Recognition Technologies
