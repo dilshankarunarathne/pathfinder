@@ -1,61 +1,62 @@
-# PathFinder: Real-Time Object Recognition and Navigation Assistance for the Blind
+# PathFinder: Navigation Assistance with Real-Time Object Detection for Visually Impaired
 
 ## Introduction
 
-This project proposes the development of a mobile application designed to leverage computer vision and object recognition technology. The app aims to provide blind users with real-time information about their surroundings, enhancing their ability to navigate safely and independently.
+This project proposes the development of a mobile application designed to provide navigation assistance to visually impaired individuals through real-time object detection. Leveraging computer vision and object recognition technology, the app aims to offer directional guidance and obstacle avoidance, helping users navigate their surroundings safely and independently.
 
 ## Project Goal
 
-The primary goal is to develop a user-friendly and accessible mobile application that empowers visually impaired individuals by providing real-time object recognition and navigation assistance. The app will offer audio descriptions of objects in the user's environment, aiding in safe and independent navigation.
+The primary goal is to develop a user-friendly and accessible mobile application that empowers visually impaired individuals by providing real-time object detection and navigation assistance. The app will offer audio descriptions of nearby objects and give directional guidance, enhancing safe and independent mobility.
 
 ## System Architecture
-The system architecture for the Real-Time Object Recognition and Navigation Assistance for the Blind consists of a mobile application integrated with computer vision and object recognition technology. The user's smartphone captures live video using the camera, which is then streamed to a server for processing. The server employs advanced object recognition algorithms to analyze the video and identify objects in real time. Recognized objects are transmitted back to the mobile application, where text-to-speech functionality provides audio descriptions to the user. This architecture ensures efficient real-time processing, delivering immediate and accurate navigation assistance to enhance the independence and safety of blind users.
+The system architecture for the Navigation Assistance with Real-Time Object Detection consists of a mobile application integrated with computer vision, GPS, and object detection technologies. The user's smartphone captures live video using the camera and processes it to detect objects in real-time. Simultaneously, GPS data can be used for outdoor navigation, and the app provides obstacle detection and navigation guidance using a combination of visual and spatial data. Recognized objects and directional cues are transmitted back to the mobile application, where text-to-speech functionality provides audio feedback to the user. This architecture ensures efficient real-time processing and delivers immediate and accurate navigation assistance.
 
   
 ![System Architecture](https://github.com/NadeeTharuka/pathfinder/blob/main/Blind%20app.drawio%20Light.png)
 
 ## Object Recognition Technologies
 
-Object recognition is a critical component of navigation assistance systems for the blind. Several studies have explored the use of various AI techniques, such as deep learning and computer vision, to identify and classify objects in real-time. Convolutional Neural Networks (CNNs) have been particularly successful in image recognition tasks due to their ability to learn hierarchical features from raw images. For instance, the YOLO (You Only Look Once) algorithm, a state-of-the-art CNN model, has been widely adopted for its efficiency and accuracy in real-time object detection (Redmon et al., 2016).
+Real-time object detection is a critical component of navigation assistance systems for the visually impaired. Various AI techniques, such as deep learning and computer vision, are used to identify and classify objects in real-time. Convolutional Neural Networks (CNNs) are particularly effective in image recognition due to their ability to learn hierarchical features from images. For instance, the YOLO (You Only Look Once) algorithm has been widely adopted for its efficiency and accuracy in real-time object detection.
 
-Mobile devices, equipped with powerful processors and cameras, provide an accessible platform for implementing these AI models. Researchers have developed mobile applications that leverage pre-trained models to recognize objects in the user's environment and provide auditory feedback. For example, the Seeing AI app by Microsoft uses AI to describe people, text, and objects to visually impaired users in real-time (Microsoft, 2020).
+Mobile devices equipped with powerful processors, GPS, and cameras provide an accessible platform for these AI models. For example, the Seeing AI app by Microsoft uses AI to describe surroundings to visually impaired users (Microsoft, 2020). Additionally, systems like NAVI combine image processing with audio guidance to provide real-time obstacle detection and path guidance.
 
 ## Methodology
 
-The methodology involves using the smartphone camera to capture live video, which is then streamed to a server. The server analyzes the image frames to detect objects and sends the results back to the mobile application. A text-to-speech module generates audio descriptions for the user.
+The methodology involves using the smartphone camera to capture live video, which is processed locally or on a server for object detection. The system uses deep learning models to detect and identify objects in the video stream. At the same time, GPS data is used to offer real-time navigation cues. A text-to-speech module generates audio descriptions for the user, along with verbal guidance to avoid obstacles or follow a path.
 
-The entire process operates seamlessly on the user's mobile device. When the app is launched, the smartphone camera is activated, allowing the user to position the phone for optimal camera view, such as in a front pocket. The real-time video is streamed to the server for object recognition and analysis. The server's results are transmitted back to the application, where text-to-speech functionality conveys the information to the user through earphones.
+When the app is launched, the smartphone camera is activated to capture the user's surroundings. Real-time object detection is performed on the video frames, while GPS data enables the system to provide guidance in both indoor and outdoor environments. Text-to-speech functionality conveys this information to the user through earphones, providing them with a detailed awareness of their environment.
 
 ## Navigation Assistance Systems
 
-Navigation assistance systems aim to provide directional guidance and obstacle avoidance to ensure safe movement for blind users. These systems typically integrate GPS for outdoor navigation and computer vision for indoor navigation. The combination of these technologies allows for comprehensive navigation support in various environments.
+Navigation assistance systems provide both obstacle detection and directional guidance to visually impaired users. These systems often integrate GPS for outdoor navigation and object detection for obstacle avoidance, ensuring comprehensive navigation support.
 
-Several studies have proposed the use of smartphone-based systems that utilize the device's camera and sensors to detect obstacles and guide users. For instance, the NAVI (Navigation Assistance for Visually Impaired Individuals) system employs image processing techniques to detect obstacles and uses audio cues to direct users around them (Mughal et al., 2018). Additionally, researchers have explored the use of augmented reality (AR) to enhance navigation assistance by overlaying virtual guides onto the real-world environment viewed through the smartphone camera (Guerreiro et al., 2017).
+Smartphone-based systems use the device’s camera and sensors to detect obstacles and provide directional guidance through audio cues. The NAVI system, for example, employs image processing techniques to detect obstacles and uses audio cues to guide users around them. Combining object detection with GPS makes it possible to offer both indoor and outdoor navigation assistance.
 
 ## Key Functionalities
 
-- Real-time Video Processing: The app captures and processes live video for object recognition.
+- Real-time Video Processing: The app captures and processes live video for real-time object detection and navigation assistance.
 
-- Object Recognition: Utilizing deep learning models, the app identifies objects within the video frames.
+- Object Detection: Deep learning models are used to identify and classify objects in the environment.
 
-- Audio Description Generation: The app generates concise audio descriptions of identified objects using text-to-speech technology.
+- Audio Description Generation: The app provides audio feedback to the user, describing objects in the surroundings.
 
-- Navigation Assistance: Future functionalities may include obstacle detection and path guidance to further aid in navigation.
-
+- Navigation Assistance: The app offers obstacle detection and path guidance, using GPS for outdoor navigation and computer vision for indoor     navigation.
 
 ## Usage
 
 - Launch the application on your mobile device.
 
-- Ensure the smartphone camera is activated and positioned for an optimal view.
+- Ensure the smartphone camera is activated and positioned for an optimal view of the environment.
 
-- The app will begin capturing and processing live video.
+- The app will begin capturing and processing live video for real-time object detection.
 
-- Detected objects will be identified, and audio descriptions will be generated and played through the earphones.
+- Detected objects and navigation cues will be provided as audio descriptions through earphones.
+
+- GPS will assist in providing directional guidance during outdoor navigation.
 
 ## Conclusion
 
-The development of real-time object recognition and navigation assistance systems using mobile applications holds significant promise for improving the quality of life for visually impaired individuals. Advances in AI and mobile technology have enabled the creation of innovative solutions that offer real-time feedback and guidance. However, ongoing research and development are necessary to address the challenges and enhance the effectiveness and usability of these systems. By leveraging emerging technologies and user-centered design principles, future systems can provide more reliable and intuitive assistance to the blind community.
+The development of real-time object detection and navigation assistance systems using mobile applications holds great potential for improving the quality of life for visually impaired individuals. Advances in AI, computer vision, and mobile technology have made it possible to create solutions that offer real-time feedback and navigation guidance. Ongoing research and development will further improve the effectiveness and usability of these systems, ultimately providing more reliable and intuitive assistance to visually impaired users.
 
 
 ## Contributing
