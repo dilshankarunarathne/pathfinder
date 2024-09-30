@@ -1,41 +1,66 @@
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 
-class Navigation extends StatefulWidget {
+class RoamScreen extends StatefulWidget {
+  const RoamScreen({super.key});
+
   @override
-  _NavigationState createState() => _NavigationState();
+  _RoamScreenState createState() => _RoamScreenState();
 }
 
-class _NavigationState extends State<Navigation> {
-  GoogleMapController? _controller;
+class _RoamScreenState extends State<RoamScreen> {
+  late AudioPlayer _controller;
+  bool _isSpeakerOn = false;
 
-  static final CameraPosition _initialCameraPosition = CameraPosition(
-    target: LatLng(37.7749, -122.4194), // Example coordinates (San Francisco)
-    zoom: 14.4746,
-  );
+  @override
+  void initState() {
+    super.initState();
+    _controller = AudioPlayer();
+  }
 
-  final Set<Marker> _markers = {};
-  final Set<Polyline> _polylines = {};
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   void _toggleAudioOutput() {
-    // Implement the logic to toggle audio output
-    print("Audio output toggled");
+    setState(() {
+      _isSpeakerOn = !_isSpeakerOn;
+      if (_isSpeakerOn) {
+        _controller.setAudioContext(AudioContext(
+          android: const AudioContextAndroid(
+            isSpeakerphoneOn: true,
+          ),
+        ));
+      } else {
+        _controller.setAudioContext(AudioContext(
+          android: const AudioContextAndroid(
+            isSpeakerphoneOn: false,
+          ),
+        ));
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: GoogleMap(
-        initialCameraPosition: _initialCameraPosition,
-        markers: _markers,
-        polylines: _polylines,
-        onMapCreated: (GoogleMapController controller) {
-          _controller = controller;
-        },
+      appBar: AppBar(
+        title: const Text('Roam Mode'),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _toggleAudioOutput,
-        child: Icon(Icons.volume_up),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: _toggleAudioOutput,
+              child: Text(
+                  _isSpeakerOn ? 'Switch to Earpiece' : 'Switch to Speaker'),
+            ),
+            // Add other UI components here
+          ],
+        ),
       ),
     );
   }

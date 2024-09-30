@@ -31,9 +31,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
         // Process the recognized speech text here
         if (result.recognizedWords.contains('roam mode')) {
-          // Navigate to Roam Mode screen
+          Navigator.pushNamed(context, '/roam_mode');
         } else if (result.recognizedWords.contains('navigate to')) {
-          // Navigate to Navigation Mode screen with the destination
+          Navigator.pushNamed(context, '/navigation_mode');
         }
       });
     }
@@ -53,9 +53,9 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset('assets/your_logo.png'), // Replace with your logo image path
+            Image.asset('lib/assets/images/logo.jpg'),
             ElevatedButton(
-              onPressed: _startListening,
+              onPressed: _isListening ? _stopListening : _startListening,
               child: Text(_isListening ? 'Stop Listening' : 'Start Listening'),
             ),
             const SizedBox(height: 20),
@@ -64,13 +64,13 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 ElevatedButton(
                   onPressed: () {
-                    // Navigate to Roam Mode screen
+                    Navigator.pushNamed(context, '/roam_mode');
                   },
                   child: const Text('Roam Mode'),
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    // Navigate to Navigation Mode screen
+                    Navigator.pushNamed(context, '/navigation_mode');
                   },
                   child: const Text('Navigation Mode'),
                 ),
