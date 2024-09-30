@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:speech_to_text/speech_to_text.dart';
 
-class NavigationModeScreen extends StatefulWidget {
-  const NavigationModeScreen({super.key});
-
+class Navigation extends StatefulWidget {
   @override
-  _NavigationModeScreenState createState() => _NavigationModeScreenState();
+  _NavigationState createState() => _NavigationState();
 }
 
-class _NavigationModeScreenState extends State<NavigationModeScreen> {
-  // ... (map initialization, speech recognition)
+class _NavigationState extends State<Navigation> {
+  static final CameraPosition _initialCameraPosition = CameraPosition(
+    target: LatLng(37.7749, -122.4194), // Example coordinates (San Francisco)
+    zoom: 14.4746,
+  );
+
+  final Set<Marker> _markers = {};
+  final Set<Polyline> _polylines = {};
 
   @override
   Widget build(BuildContext context) {
