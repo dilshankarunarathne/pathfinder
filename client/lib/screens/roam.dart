@@ -1,42 +1,41 @@
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/material.dart';
-import 'package:camera/camera.dart';
-import 'package:flutter_sound/flutter_sound.dart';
-import 'package:speech_to_text/speech_to_text.dart';
 
-class RoamModeScreen extends StatefulWidget {
-  const RoamModeScreen({super.key});
-
+class Navigation extends StatefulWidget {
   @override
-  _RoamModeScreenState createState() => _RoamModeScreenState();
+  _NavigationState createState() => _NavigationState();
 }
 
-class _RoamModeScreenState extends State<RoamModeScreen> {
-  // ... (camera, audio, speech recognition initialization)
+class _NavigationState extends State<Navigation> {
+  GoogleMapController? _controller;
+
+  static final CameraPosition _initialCameraPosition = CameraPosition(
+    target: LatLng(37.7749, -122.4194), // Example coordinates (San Francisco)
+    zoom: 14.4746,
+  );
+
+  final Set<Marker> _markers = {};
+  final Set<Polyline> _polylines = {};
+
+  void _toggleAudioOutput() {
+    // Implement the logic to toggle audio output
+    print("Audio output toggled");
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          // Camera preview
-          Expanded(
-            child: CameraPreview(_controller),
-          ),
-          // Audio output controls
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              IconButton(
-                onPressed: _toggleAudioOutput,
-                icon: const Icon(Icons.headset),
-              ),
-              IconButton(
-                onPressed: _toggleAudioOutput,
-                icon: const Icon(Icons.speaker),
-              ),
-            ],
-          ),
-        ],
+      body: GoogleMap(
+        initialCameraPosition: _initialCameraPosition,
+        markers: _markers,
+        polylines: _polylines,
+        onMapCreated: (GoogleMapController controller) {
+          _controller = controller;
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _toggleAudioOutput,
+        child: Icon(Icons.volume_up),
       ),
     );
   }
