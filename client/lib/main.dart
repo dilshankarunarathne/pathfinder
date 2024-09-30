@@ -1,45 +1,44 @@
-import 'package:client/screens/splash.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter_sound/flutter_sound.dart';
-import 'package:camera/camera.dart';
-import 'package:speech_to_text/speech_to_text.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+class Navigation extends StatefulWidget {
+  const Navigation({super.key});
 
-  // Initialize Firebase
-  await Firebase.initializeApp();
-
-  // Initialize Flutter Sound
-  await FlutterSoundPlayer.instance.openPlayer();
-
-  // Initialize Camera
-  final cameras = await availableCameras();
-  final firstCamera = cameras.first;
-
-  // Initialize Speech-to-Text
-  final speech = SpeechToText();
-  await speech.initialize();
-
-  // Initialize Google Maps
-  await GoogleMapsFlutter.init();
-
-  runApp(const MyApp());
+  @override
+  _NavigationState createState() => _NavigationState();
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class _NavigationState extends State<Navigation> {
+  GoogleMapController? _controller;
+
+  static const CameraPosition _initialCameraPosition = CameraPosition(
+    target: LatLng(37.7749, -122.4194), // Example coordinates (San Francisco)
+    zoom: 14.4746,
+  );
+
+  final Set<Marker> _markers = {};
+  final Set<Polyline> _polylines = {};
+
+  void _toggleAudioOutput() {
+    // Implement the logic to toggle audio output
+    print("Audio output toggled");
+  }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Navigation App',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
+    return Scaffold(
+      body: GoogleMap(
+        initialCameraPosition: _initialCameraPosition,
+        markers: _markers,
+        polylines: _polylines,
+        onMapCreated: (GoogleMapController controller) {
+          _controller = controller;
+        },
       ),
-      home: const SplashScreen(),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _toggleAudioOutput,
+        child: const Icon(Icons.volume_up),
+      ),
     );
   }
 }
