@@ -1,10 +1,23 @@
 import 'package:client/screens/home.dart';
+import 'package:client/screens/login.dart';
 import 'package:client/screens/navigation.dart';
+import 'package:client/screens/register.dart';
 import 'package:client/screens/roam.dart';
+import 'package:device_preview/device_preview.dart';
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const MyApp());
+  var devicePre = false;
+
+  // ignore: dead_code
+  if (devicePre) {
+    runApp(DevicePreview(
+      //enabled: !kReleaseMode,
+      builder: (context) => const MyApp(),
+    ));
+  } else {
+    runApp(const MyApp());
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -17,10 +30,15 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const HomeScreen(),
+      useInheritedMediaQuery: true,
+      locale: DevicePreview.locale(context),
+      builder: DevicePreview.appBuilder,
+      home: const SignInScreen(),
       routes: {
+        '/home': (context) => const HomeScreen(),
         '/roam_mode': (context) => const RoamScreen(),
         '/navigation_mode': (context) => Navigation(),
+        '/sign_up': (context) => const SignUpScreen(),
       },
     );
   }

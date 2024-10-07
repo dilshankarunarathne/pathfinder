@@ -1,84 +1,80 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
-class SignupScreen extends StatefulWidget {
-  const SignupScreen({super.key});
+class SignUpScreen extends StatefulWidget {
+  const SignUpScreen({super.key});
 
   @override
-  _SignupScreenState createState() => _SignupScreenState();
+  _SignUpScreenState createState() => _SignUpScreenState();
 }
 
-class _SignupScreenState extends State<SignupScreen> {
+class _SignUpScreenState extends State<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _isLoading = false;
-
-  Future<void> _signup() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-      });
-
-      try {
-        await FirebaseAuth.instance.createUserWithEmailAndPassword(
-          email: _emailController.text,
-          password: _passwordController.text,
-        );
-        // Successful signup, navigate to home screen or profile screen
-      } catch (e) {
-        // Handle signup errors
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Signup failed')),
-        );
-      } finally {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
-  }
+  String email = '';
+  String password = '';
+  String confirmPassword = '';
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Signup'),
+        title: const Text('Sign Up'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               TextFormField(
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
                 decoration: const InputDecoration(labelText: 'Email'),
                 validator: (value) {
-                  if (value!.isEmpty || !value.contains('@')) {
-                    return 'Please enter a valid email address';
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your email';
                   }
                   return null;
+                },
+                onChanged: (value) {
+                  setState(() {
+                    email = value;
+                  });
                 },
               ),
               TextFormField(
-                controller: _passwordController,
-                obscureText: true,
                 decoration: const InputDecoration(labelText: 'Password'),
+                obscureText: true,
                 validator: (value) {
-                  if (value!.isEmpty || value.length < 6) {
-                    return 'Password must be at least 6 characters long';
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your password';
+                  }
+                  return null;
+                },
+                onChanged: (value) {
+                  setState(() {
+                    password = value;
+                  });
+                },
+              ),
+              TextFormField(
+                decoration:
+                    const InputDecoration(labelText: 'Confirm Password'),
+                obscureText: true,
+                validator: (value) {
+                  if (value != password) {
+                    return 'Passwords do not match';
                   }
                   return null;
                 },
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: _signup,
-                child: _isLoading
-                    ? const CircularProgressIndicator()
-                    : const Text('Signup'),
+                onPressed: () {
+                  if (_formKey.currentState!.validate()) {
+                    // Navigate to HomeScreen after Sign Up
+                    Navigator.pushReplacementNamed(context, '/home');
+                  }
+                },
+                child: const Text('Sign Up'),
               ),
             ],
           ),

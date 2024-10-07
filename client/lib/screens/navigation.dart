@@ -8,7 +8,7 @@ class Navigation extends StatefulWidget {
 
 class _NavigationState extends State<Navigation> {
   static final CameraPosition _initialCameraPosition = CameraPosition(
-    target: LatLng(37.7749, -122.4194),
+    target: LatLng(37.7749, -122.4194), // Example coordinates (San Francisco)
     zoom: 14.4746,
   );
 

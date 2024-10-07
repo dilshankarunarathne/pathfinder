@@ -21,3 +21,6 @@ async def websocket_endpoint(websocket: WebSocket):
         data = await websocket.receive_bytes()
         object_names = start_stream_capture(data)
         await websocket.send_text(object_names)
+
+
+app.add_route(auth.router)
