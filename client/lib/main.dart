@@ -15,6 +15,7 @@ void main() {
       //enabled: !kReleaseMode,
       builder: (context) => const MyApp(),
     ));
+    // ignore: dead_code
   } else {
     runApp(const MyApp());
   }
@@ -36,7 +37,7 @@ class MyApp extends StatelessWidget {
       home: const SignInScreen(),
       routes: {
         '/home': (context) => const HomeScreen(),
-        '/roam_mode': (context) => const RoamScreen(),
+        '/roam_mode': (context) => const RoamModeScreen(),
         '/navigation_mode': (context) => Navigation(),
         '/sign_up': (context) => const SignUpScreen(),
       },
