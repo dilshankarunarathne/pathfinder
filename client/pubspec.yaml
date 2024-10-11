@@ -23,6 +23,9 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_sound: ^9.6.0
   web_socket_channel: ^2.1.0
+  flutter_mapbox_navigation: ^0.2.2
+  location: ^6.0.2
+  mapbox_gl: ^0.16.0
 
 dev_dependencies:
   flutter_test:

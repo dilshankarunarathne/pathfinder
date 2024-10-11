@@ -38,7 +38,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/home': (context) => const HomeScreen(),
         '/roam_mode': (context) => const RoamModeScreen(),
-        '/navigation_mode': (context) => Navigation(),
+        '/navigation_mode': (context) => const NavigationPage(),
         '/sign_up': (context) => const SignUpScreen(),
       },
     );
