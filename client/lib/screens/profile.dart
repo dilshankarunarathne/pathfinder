@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -6,8 +5,6 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profile'),
@@ -16,10 +13,9 @@ class ProfileScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Email: ${user?.email}'),
+            const Text('Email: yourname@gmail.com'),
             ElevatedButton(
               onPressed: () {
-                FirebaseAuth.instance.signOut();
                 // Navigate to login screen
               },
               child: const Text('Logout'),
