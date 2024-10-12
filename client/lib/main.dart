@@ -1,10 +1,11 @@
-import 'package:client/screens/home.dart';
-import 'package:client/screens/login.dart';
-import 'package:client/screens/navigation.dart';
-import 'package:client/screens/register.dart';
-import 'package:client/screens/roam.dart';
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter/material.dart';
+
+import 'screens/home.dart';
+import 'screens/login.dart';
+import 'screens/navigation.dart';
+import 'screens/register.dart';
+import 'screens/roam.dart';
 
 void main() {
   var devicePre = false;
@@ -38,7 +39,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/home': (context) => const HomeScreen(),
         '/roam_mode': (context) => const RoamModeScreen(),
-        '/navigation_mode': (context) => const NavigationPage(),
+        '/navigation_mode': (context) => const NavigationScreen(),
         '/sign_up': (context) => const SignUpScreen(),
       },
     );
