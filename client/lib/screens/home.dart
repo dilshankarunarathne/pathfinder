@@ -51,15 +51,11 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Pathfinder'),
-      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset(
-                'assets/your_logo.png'), // Replace with your logo image path
+            Image.asset('assets/images/logo.jpg'),
             ElevatedButton(
               onPressed: _isListening ? _stopListening : _startListening,
               child: Text(_isListening ? 'Stop Listening' : 'Start Listening'),

@@ -49,6 +49,12 @@ class _NavigationScreenState extends State<NavigationScreen> {
       ),
       body: Column(
         children: [
+          // SizedBox(
+          //   width: 200, // Set the desired width
+          //   height: 200, // Set the desired height
+          //   child: Image.asset(
+          //       'assets/images/logo.jpg'), // Add the logo at the top
+          // ),
           Expanded(
             child: Container(
               color: Colors.grey[100],

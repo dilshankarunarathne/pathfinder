@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:typed_data';
-import 'dart:ui';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
@@ -81,8 +80,11 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
     return Scaffold(
       body: Column(
         children: [
+          Image.asset('assets/images/logo.jpg'), // Add the logo at the top
           Expanded(
-            child: CameraPreview(_controller!),
+            child: _controller != null && _controller!.value.isInitialized
+                ? CameraPreview(_controller!)
+                : const Center(child: CircularProgressIndicator()),
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,

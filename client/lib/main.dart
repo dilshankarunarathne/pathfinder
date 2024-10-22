@@ -8,7 +8,7 @@ import 'screens/register.dart';
 import 'screens/roam.dart';
 
 void main() {
-  var devicePre = true;
+  var devicePre = false;
 
   // ignore: dead_code
   if (devicePre) {
