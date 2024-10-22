@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_mapbox_navigation/flutter_mapbox_navigation.dart';
+import 'package:speech_to_text/speech_recognition_result.dart';
+import 'package:speech_to_text/speech_to_text.dart';
 
 class NavigationScreen extends StatefulWidget {
   const NavigationScreen({super.key});
@@ -17,6 +19,8 @@ class _NavigationScreenState extends State<NavigationScreen> {
   bool _isNavigating = false;
   bool _arrived = false;
   late MapBoxOptions _navigationOption;
+  final SpeechToText _speechToText = SpeechToText();
+  bool _isListening = false;
 
   Future<void> initialize() async {
     if (!mounted) return;
@@ -32,12 +36,50 @@ class _NavigationScreenState extends State<NavigationScreen> {
   @override
   void initState() {
     initialize();
+    _initSpeech();
     super.initState();
+  }
+
+  Future<void> _initSpeech() async {
+    await _speechToText.initialize();
+    _startListening(); // Start listening automatically
+  }
+
+  void _startListening() async {
+    if (!_isListening) {
+      await _speechToText.listen(onResult: _onSpeechResult);
+      print('Listening...');
+      setState(() {
+        _isListening = true;
+      });
+    }
+  }
+
+  void _stopListening() async {
+    if (_isListening) {
+      await _speechToText.stop();
+      setState(() {
+        _isListening = false;
+      });
+      // Restart listening after a short delay
+      Future.delayed(const Duration(seconds: 1), _startListening);
+    }
+  }
+
+  void _onSpeechResult(SpeechRecognitionResult result) {
+    final recognizedWords = result.recognizedWords.toLowerCase();
+    print('Recognized words: $recognizedWords');
+    if (recognizedWords.contains('go back')) {
+      Navigator.pop(context);
+    } else if (recognizedWords.contains('camera')) {
+      Navigator.pushNamed(context, '/roam_mode');
+    }
   }
 
   @override
   void dispose() {
     _controller?.dispose();
+    _speechToText.stop();
     super.dispose();
   }
 
@@ -49,12 +91,12 @@ class _NavigationScreenState extends State<NavigationScreen> {
       ),
       body: Column(
         children: [
-          // SizedBox(
-          //   width: 200, // Set the desired width
-          //   height: 200, // Set the desired height
-          //   child: Image.asset(
-          //       'assets/images/logo.jpg'), // Add the logo at the top
-          // ),
+          SizedBox(
+            width: 200, // Set the desired width
+            height: 200, // Set the desired height
+            child: Image.asset(
+                'assets/images/logo.jpg'), // Add the logo at the top
+          ),
           Expanded(
             child: Container(
               color: Colors.grey[100],
@@ -77,6 +119,10 @@ class _NavigationScreenState extends State<NavigationScreen> {
                 ElevatedButton(
                   onPressed: () =>
                       _startNavigation(), // Implement navigation logic
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: const Color(0xFF004D40), // Text color
+                  ),
                   child: const Text('Start Navigation'),
                 ),
                 const Spacer(),

@@ -62,6 +62,10 @@ class _SignInScreenState extends State<SignInScreen> {
                     Navigator.pushReplacementNamed(context, '/home');
                   }
                 },
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: const Color(0xFF004D40), // Text color
+                ),
                 child: const Text('Sign In'),
               ),
               const SizedBox(height: 10),

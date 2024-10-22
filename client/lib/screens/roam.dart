@@ -3,6 +3,8 @@ import 'dart:typed_data';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:speech_to_text/speech_recognition_result.dart';
+import 'package:speech_to_text/speech_to_text.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
@@ -17,12 +19,15 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
   CameraController? _controller;
   late WebSocketChannel _channel;
   bool _isStreaming = false;
+  final SpeechToText _speechToText = SpeechToText();
+  bool _isListening = false;
 
   @override
   void initState() {
     super.initState();
     _initializeCamera();
     _connectWebSocket();
+    _initSpeech();
   }
 
   Future<void> _initializeCamera() async {
@@ -43,6 +48,42 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
     _channel.stream.listen((message) {
       // Handle server responses here
     });
+  }
+
+  Future<void> _initSpeech() async {
+    await _speechToText.initialize();
+    _startListening(); // Start listening automatically
+  }
+
+  void _startListening() async {
+    if (!_isListening) {
+      await _speechToText.listen(onResult: _onSpeechResult);
+      print('Listening...');
+      setState(() {
+        _isListening = true;
+      });
+    }
+  }
+
+  void _stopListening() async {
+    if (_isListening) {
+      await _speechToText.stop();
+      setState(() {
+        _isListening = false;
+      });
+      // Restart listening after a short delay
+      Future.delayed(const Duration(seconds: 1), _startListening);
+    }
+  }
+
+  void _onSpeechResult(SpeechRecognitionResult result) {
+    final recognizedWords = result.recognizedWords.toLowerCase();
+    print('Recognized words: $recognizedWords');
+    if (recognizedWords.contains('go back')) {
+      Navigator.pop(context);
+    } else if (recognizedWords.contains('navigation')) {
+      Navigator.pushNamed(context, '/navigation_mode');
+    }
   }
 
   Future<void> _startStreaming() async {
@@ -91,10 +132,18 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
             children: [
               ElevatedButton(
                 onPressed: _startStreaming,
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: const Color(0xFF004D40), // Text color
+                ),
                 child: const Text('Start Streaming'),
               ),
               ElevatedButton(
                 onPressed: _stopStreaming,
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: const Color(0xFF004D40), // Text color
+                ),
                 child: const Text('Stop Streaming'),
               ),
             ],
@@ -108,6 +157,7 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
   void dispose() {
     _controller?.dispose();
     _channel.sink.close();
+    _speechToText.stop();
     super.dispose();
   }
 }

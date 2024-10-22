@@ -25,27 +25,27 @@ class BottomNavBar extends StatelessWidget {
           IconButton(
             onPressed: () => Navigator.pushNamed(context, '/home'),
             icon: const Icon(CupertinoIcons.home),
-            color: Colors.blue,
+            color: const Color(0xFF004D40), // Dark-greenish-blue color
           ),
           IconButton(
             onPressed: () => Navigator.pushNamed(context, '/roam_mode'),
             icon: const Icon(CupertinoIcons.command),
-            color: Colors.blue,
+            color: const Color(0xFF004D40), // Dark-greenish-blue color
           ),
           IconButton(
             onPressed: () => Navigator.pushNamed(context, '/navigation_mode'),
             icon: const Icon(CupertinoIcons.compass),
-            color: Colors.blue,
+            color: const Color(0xFF004D40), // Dark-greenish-blue color
           ),
           IconButton(
             onPressed: () => Navigator.pushNamed(context, '/settings'),
             icon: const Icon(CupertinoIcons.settings),
-            color: Colors.blue,
+            color: const Color(0xFF004D40), // Dark-greenish-blue color
           ),
           IconButton(
             onPressed: () => Navigator.pushNamed(context, '/profile'),
             icon: const Icon(CupertinoIcons.person),
-            color: Colors.blue,
+            color: const Color(0xFF004D40), // Dark-greenish-blue color
           ),
         ],
       ),

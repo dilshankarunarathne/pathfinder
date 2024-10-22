@@ -70,17 +70,25 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Pathfinder'),
-      ),
+      // appBar: AppBar(
+      //   title: const Text('Pathfinder'),
+      // ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset('assets/images/logo.jpg',
-                width: 100, height: 100), // Add the logo at the top
+            Image.asset(
+              'assets/images/logo.jpg',
+              width: 200, // Increase the width
+              height: 200, // Increase the height
+            ), // Add the logo at the top
+            const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _isListening ? _stopListening : _startListening,
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.white,
+                backgroundColor: const Color(0xFF004D40), // Text color
+              ),
               child: Text(_isListening ? 'Stop Listening' : 'Start Listening'),
             ),
             const SizedBox(height: 20),
@@ -91,12 +99,20 @@ class _HomeScreenState extends State<HomeScreen> {
                   onPressed: () {
                     Navigator.pushNamed(context, '/roam_mode');
                   },
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: const Color(0xFF004D40), // Text color
+                  ),
                   child: const Text('Roam Mode'),
                 ),
                 ElevatedButton(
                   onPressed: () {
                     Navigator.pushNamed(context, '/navigation_mode');
                   },
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: const Color(0xFF004D40), // Text color
+                  ),
                   child: const Text('Navigation Mode'),
                 ),
               ],

@@ -18,6 +18,10 @@ class ProfileScreen extends StatelessWidget {
               onPressed: () {
                 // Navigate to login screen
               },
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.white,
+                backgroundColor: const Color(0xFF004D40), // Text color
+              ),
               child: const Text('Logout'),
             ),
           ],
