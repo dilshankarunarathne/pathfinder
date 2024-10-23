@@ -42,10 +42,19 @@ class _NavigationScreenState extends State<NavigationScreen> {
 
   Future<void> _initSpeech() async {
     await _speechToText.initialize();
-    _startListening(); // Start listening automatically
+    _startListeningLoop(); // Start the listening loop
   }
 
-  void _startListening() async {
+  void _startListeningLoop() async {
+    while (mounted) {
+      if (!_isListening) {
+        await _startListening();
+      }
+      await Future.delayed(const Duration(seconds: 5));
+    }
+  }
+
+  Future<void> _startListening() async {
     if (!_isListening) {
       await _speechToText.listen(onResult: _onSpeechResult);
       print('Listening...');
@@ -55,14 +64,12 @@ class _NavigationScreenState extends State<NavigationScreen> {
     }
   }
 
-  void _stopListening() async {
+  Future<void> _stopListening() async {
     if (_isListening) {
       await _speechToText.stop();
       setState(() {
         _isListening = false;
       });
-      // Restart listening after a short delay
-      Future.delayed(const Duration(seconds: 1), _startListening);
     }
   }
 
