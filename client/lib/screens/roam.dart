@@ -21,6 +21,7 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
   bool _isStreaming = false;
   final SpeechToText _speechToText = SpeechToText();
   bool _isListening = false;
+  Timer? _listeningTimer;
 
   @override
   void initState() {
@@ -72,7 +73,7 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
         _isListening = false;
       });
       // Restart listening after a short delay
-      Future.delayed(const Duration(seconds: 1), _startListening);
+      _listeningTimer = Timer(const Duration(seconds: 5), _startListening);
     }
   }
 
@@ -158,6 +159,7 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
     _controller?.dispose();
     _channel.sink.close();
     _speechToText.stop();
+    _listeningTimer?.cancel();
     super.dispose();
   }
 }
