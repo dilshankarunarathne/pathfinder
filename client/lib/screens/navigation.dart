@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_mapbox_navigation/flutter_mapbox_navigation.dart';
+import 'package:location/location.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
@@ -13,7 +16,7 @@ class NavigationScreen extends StatefulWidget {
 class _NavigationScreenState extends State<NavigationScreen> {
   MapBoxNavigationViewController? _controller;
   String? _instruction;
-  final bool _isMultipleStop = false; // Change to true for multiple stops
+  final bool _isMultipleStop = false;
   double? _distanceRemaining, _durationRemaining;
   bool _routeBuilt = false;
   bool _isNavigating = false;
@@ -143,20 +146,72 @@ class _NavigationScreenState extends State<NavigationScreen> {
   }
 
   Future<void> _startNavigation() async {
-    // Implement your navigation logic here
-    // For example, define your waypoints for multiple stops
-    if (_isMultipleStop) {
-      // ... Add your waypoints logic here ...
-    } else {
-      // Single stop navigation (replace with your destination)
-      final destination = WayPoint(
-        name: 'Your Destination Name',
-        latitude: 37.7749, // Replace with your destination latitude
-        longitude: -122.4194, // Replace with your destination longitude
-      );
-      await _controller?.buildRoute(wayPoints: [destination]);
-      await _controller?.startNavigation();
+    // Define your destination coordinates
+    const double destinationLatitude = 8.655370; // Replace with your latitude
+    const double destinationLongitude = 81.21151; // Replace with your longitude
+
+    // Get the current location
+    Location location = Location();
+
+    // Check if location services are enabled
+    bool serviceEnabled = await location.serviceEnabled();
+    if (!serviceEnabled) {
+      serviceEnabled = await location.requestService();
+      if (!serviceEnabled) {
+        return;
+      }
     }
+
+    // Check for location permissions
+    PermissionStatus permissionGranted = await location.hasPermission();
+    if (permissionGranted == PermissionStatus.denied) {
+      permissionGranted = await location.requestPermission();
+      if (permissionGranted != PermissionStatus.granted) {
+        return;
+      }
+    }
+
+    LocationData currentLocation = await location.getLocation();
+
+    // Create WayPoint objects for the current location and the destination
+    final start = WayPoint(
+      latitude: currentLocation.latitude!,
+      longitude: currentLocation.longitude!,
+      name: 'Start',
+    );
+    final destination = WayPoint(
+      latitude: destinationLatitude,
+      longitude: destinationLongitude,
+      name: 'Destination',
+    );
+
+    // Implement your navigation logic here
+    if (_isMultipleStop) {
+      // Add your waypoints logic here for multiple stops
+    } else {
+      // Single stop navigation
+      // Use the start and destination WayPoint objects
+      await _navigateToDestination(start, destination);
+    }
+  }
+
+  // Example method to navigate to a destination
+  Future<void> _navigateToDestination(
+      WayPoint start, WayPoint destination) async {
+    // Implement the actual navigation logic here
+    print(
+        'Navigating from: ${start.name} (${start.latitude}, ${start.longitude}) to ${destination.name} (${destination.latitude}, ${destination.longitude})');
+
+    // Start navigation using MapBoxNavigation
+    await MapBoxNavigation.instance.startNavigation(
+      wayPoints: [start, destination],
+      options: MapBoxOptions(
+        mode: MapBoxNavigationMode.driving,
+        simulateRoute: false,
+        language: "en",
+        units: VoiceUnits.metric,
+      ),
+    );
   }
 
   Future<void> _onRouteEvent(e) async {
