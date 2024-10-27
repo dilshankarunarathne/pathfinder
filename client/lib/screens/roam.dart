@@ -21,6 +21,7 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
   final SpeechToText _speechToText = SpeechToText();
   bool _isListening = false;
   Timer? _listeningTimer;
+  Timer? _inferenceTimer;
   List<dynamic>? _recognitions;
   Interpreter? _interpreter;
   late ImageProcessor _imageProcessor;
@@ -84,7 +85,7 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
 
   Future<void> _loadModel() async {
     try {
-      _interpreter = await Interpreter.fromAsset('assets/yolov2_tiny.tflite');
+      _interpreter = await Interpreter.fromAsset('yolov2_tiny.tflite');
       _imageProcessor = ImageProcessorBuilder()
           .add(ResizeOp(416, 416, ResizeMethod.BILINEAR))
           .build();
@@ -98,7 +99,11 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
     if (!_isStreaming) {
       await _controller!.startImageStream((CameraImage image) async {
         // Run the model on the image data
-        _runModelOnFrame(image);
+        if (_inferenceTimer == null || !_inferenceTimer!.isActive) {
+          _inferenceTimer = Timer(const Duration(seconds: 1), () {
+            _runModelOnFrame(image);
+          });
+        }
       });
 
       setState(() {
@@ -108,7 +113,21 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
   }
 
   Future<void> _runModelOnFrame(CameraImage image) async {
-    if (_interpreter == null) return;
+    print("---------- running model on image ");
+
+    if (_interpreter == null) {
+      print("---------- Model not loaded, trying to load again...");
+      try {
+        _interpreter = await Interpreter.fromAsset('yolov2_tiny.tflite');
+        _imageProcessor = ImageProcessorBuilder()
+            .add(ResizeOp(416, 416, ResizeMethod.BILINEAR))
+            .build();
+        print('----------------Model loaded');
+      } catch (e) {
+        print('------------------ Failed to load model: $e');
+        return;
+      }
+    }
 
     // Convert image to input format
     var input = _preProcessImage(image);
@@ -117,7 +136,12 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
     var output = List.filled(1 * 13 * 13 * 125, 0.0).reshape([1, 13, 13, 125]);
 
     // Run inference
-    _interpreter!.run(input.buffer.asUint8List(), output);
+    try {
+      _interpreter!.run(input.buffer.asUint8List(), output);
+      print("---------- output: $output");
+    } catch (e) {
+      print("---------- Error during inference: $e");
+    }
 
     // Process output
     setState(() {
@@ -152,7 +176,9 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
         for (int x = 0; x < width; x++) {
           final pixelIndex = y * width + x;
           final byteIndex = y * bytesPerRow + x * bytesPerPixel;
-          buffer[pixelIndex * numChannels + i] = bytes[byteIndex];
+          if (byteIndex < bytes.length) {
+            buffer[pixelIndex * numChannels + i] = bytes[byteIndex];
+          }
         }
       }
     }
@@ -191,7 +217,7 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
                 ? Stack(
                     children: [
                       CameraPreview(_controller!),
-                      _buildRecognitionResults(),
+                      // _buildRecognitionResults(),
                     ],
                   )
                 : const Center(child: CircularProgressIndicator()),
@@ -225,13 +251,21 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
   Widget _buildRecognitionResults() {
     if (_recognitions == null) return Container();
 
+    print("----------- recognitions: $_recognitions");
+
     return Stack(
       children: _recognitions!.map((recognition) {
+        final rect = recognition['rect'];
+        final x = double.tryParse(rect['x'].toString()) ?? 0.0;
+        final y = double.tryParse(rect['y'].toString()) ?? 0.0;
+        final w = double.tryParse(rect['w'].toString()) ?? 0.0;
+        final h = double.tryParse(rect['h'].toString()) ?? 0.0;
+
         return Positioned(
-          left: recognition['rect']['x'] * MediaQuery.of(context).size.width,
-          top: recognition['rect']['y'] * MediaQuery.of(context).size.height,
-          width: recognition['rect']['w'] * MediaQuery.of(context).size.width,
-          height: recognition['rect']['h'] * MediaQuery.of(context).size.height,
+          left: x * MediaQuery.of(context).size.width,
+          top: y * MediaQuery.of(context).size.height,
+          width: w * MediaQuery.of(context).size.width,
+          height: h * MediaQuery.of(context).size.height,
           child: Container(
             decoration: BoxDecoration(
               border: Border.all(
@@ -258,6 +292,7 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
     _controller?.dispose();
     _speechToText.stop();
     _listeningTimer?.cancel();
+    _inferenceTimer?.cancel();
     _interpreter?.close();
     super.dispose();
   }
