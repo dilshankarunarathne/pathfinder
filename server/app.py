@@ -1,8 +1,8 @@
+import cv2
+import numpy as np
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from ultralytics import YOLO
-import cv2
-import numpy as np
 
 from static.distances import KNOWN_WIDTHS, FOCAL_LENGTH
 
@@ -71,15 +71,10 @@ async def predict_image(file: UploadFile = File(...)):
                 if known_width is not None:
                     # Estimate the distance
                     distance = calculate_distance(known_width, object_width_in_image, FOCAL_LENGTH)
-                    object_names.append(f"{classNames[cls]}: {distance} inches away")
+                    rounded_distance = round(distance)
+                    object_names.append(f"{classNames[cls]}: {rounded_distance} inches away")
                 else:
                     object_names.append(classNames[cls])
-
-        for r in results:
-            boxes = r.boxes
-            for box in boxes:
-                cls = int(box.cls[0])
-                object_names.append(classNames[cls])
 
         print(object_names)
         return {"objects": object_names}

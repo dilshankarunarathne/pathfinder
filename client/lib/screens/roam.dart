@@ -22,14 +22,16 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
   final FlutterTts _flutterTts = FlutterTts();
   bool _isListening = false;
   Timer? _listeningTimer;
-  Timer? _captureTimer;
+  Timer? _responseTimer;
   List<dynamic>? _recognitions;
+  bool _waitingForResponse = false;
 
   @override
   void initState() {
     super.initState();
     _initializeCamera();
     _initSpeech();
+    _initTts();
   }
 
   Future<void> _initializeCamera() async {
@@ -44,13 +46,20 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
     await _controller!.initialize();
     setState(() {});
 
-    // Start capturing and sending images every 5 seconds
-    _startCapturing();
+    // Start capturing and sending images
+    _captureAndSendImage();
   }
 
   Future<void> _initSpeech() async {
     await _speechToText.initialize();
     _startListening(); // Start listening automatically
+  }
+
+  void _initTts() {
+    _flutterTts.setCompletionHandler(() {
+      // Capture and send the next image after TTS finishes speaking
+      _captureAndSendImage();
+    });
   }
 
   void _startListening() async {
@@ -84,12 +93,6 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
     }
   }
 
-  void _startCapturing() {
-    _captureTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      _captureAndSendImage();
-    });
-  }
-
   Future<void> _captureAndSendImage() async {
     if (_controller == null || !_controller!.value.isInitialized) {
       print("Camera is not initialized");
@@ -113,6 +116,16 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
       ..files.add(
           http.MultipartFile.fromBytes('file', bytes, filename: 'frame.jpg'));
 
+    _waitingForResponse = true;
+
+    // Set a timer to resend the image if no response is received within 7 seconds
+    _responseTimer = Timer(const Duration(seconds: 7), () {
+      if (_waitingForResponse) {
+        print('No response received within 7 seconds, resending image...');
+        _sendImageToServer(bytes);
+      }
+    });
+
     final response = await request.send();
 
     if (response.statusCode == 200) {
@@ -123,8 +136,14 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
         print('-------------------//--- Recognitions: $responseData');
         _speakRecognitions();
       });
+      _waitingForResponse = false;
+      _responseTimer?.cancel();
     } else {
       print('Failed to send image to server: ${response.statusCode}');
+      _waitingForResponse = false;
+      _responseTimer?.cancel();
+      // Retry sending the image
+      _captureAndSendImage();
     }
   }
 
@@ -168,7 +187,7 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
     _controller?.dispose();
     _speechToText.stop();
     _listeningTimer?.cancel();
-    _captureTimer?.cancel();
+    _responseTimer?.cancel();
     super.dispose();
   }
 }
