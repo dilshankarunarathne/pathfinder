@@ -118,6 +118,7 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
       final decodedData = jsonDecode(responseData);
       setState(() {
         _recognitions = decodedData['objects'];
+        print('-------------------//--- Recognitions: $responseData');
       });
     } else {
       print('Failed to send image to server: ${response.statusCode}');
@@ -129,20 +130,19 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
     return Scaffold(
       body: Column(
         children: [
-          Image.asset('assets/images/logo.jpg'), // Add the logo at the top
           Expanded(
             child: _controller != null && _controller!.value.isInitialized
-                ? Stack(
-                    children: [
-                      CameraPreview(_controller!),
-                      _buildRecognitionResults(),
-                    ],
+                ? Center(
+                    child: AspectRatio(
+                      aspectRatio: _controller!.value.aspectRatio,
+                      child: CameraPreview(_controller!),
+                    ),
                   )
                 : const Center(child: CircularProgressIndicator()),
           ),
           if (_recognitions != null)
             Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.all(16.0),
               child: Text(
                 'Recognitions: ${_recognitions!.join(', ')}',
                 style: const TextStyle(fontSize: 16, color: Colors.black),
@@ -151,10 +151,6 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
         ],
       ),
     );
-  }
-
-  Widget _buildRecognitionResults() {
-    return Container(); // No overlay needed for now
   }
 
   @override

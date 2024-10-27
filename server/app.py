@@ -1,8 +1,8 @@
-import cv2
-import numpy as np
-from fastapi import FastAPI, WebSocket, UploadFile, File
+from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from ultralytics import YOLO
+import cv2
+import numpy as np
 
 app = FastAPI()
 
@@ -33,32 +33,20 @@ async def predict_image(file: UploadFile = File(...)):
     np_arr = np.frombuffer(contents, np.uint8)
     frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
-    cv2.imwrite("assets/image1.jpg", frame)
-
     if frame is None:
         raise ValueError("Failed to decode frame data")
 
     try:
-        detection_output = model.predict(source=frame, conf=0.25)
-        object_names = [classNames[int(detection[5])] for detection in detection_output]
+        results = model(frame)
+        object_names = []
+        for r in results:
+            boxes = r.boxes
+            for box in boxes:
+                cls = int(box.cls[0])
+                object_names.append(classNames[cls])
         return {"objects": object_names}
     except Exception as e:
         return {"error": str(e)}
-
-
-def start_stream_capture(frame_data):
-    np_arr = np.frombuffer(frame_data, np.uint8)
-    frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
-
-    if frame is None:
-        raise ValueError("Failed to decode frame data")
-
-    try:
-        detection_output = model.predict(source=frame, conf=0.25)
-        object_names = [classNames[int(detection[5])] for detection in detection_output]
-        return ', '.join(object_names)
-    except Exception as e:
-        return "No object detected"
 
 
 if __name__ == "__main__":
