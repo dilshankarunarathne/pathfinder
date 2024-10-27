@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:http/http.dart' as http;
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
@@ -18,6 +19,7 @@ class RoamModeScreen extends StatefulWidget {
 class _RoamModeScreenState extends State<RoamModeScreen> {
   CameraController? _controller;
   final SpeechToText _speechToText = SpeechToText();
+  final FlutterTts _flutterTts = FlutterTts();
   bool _isListening = false;
   Timer? _listeningTimer;
   Timer? _captureTimer;
@@ -119,9 +121,17 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
       setState(() {
         _recognitions = decodedData['objects'];
         print('-------------------//--- Recognitions: $responseData');
+        _speakRecognitions();
       });
     } else {
       print('Failed to send image to server: ${response.statusCode}');
+    }
+  }
+
+  Future<void> _speakRecognitions() async {
+    if (_recognitions != null && _recognitions!.isNotEmpty) {
+      final text = 'Recognized objects: ${_recognitions!.join(', ')}';
+      await _flutterTts.speak(text);
     }
   }
 
