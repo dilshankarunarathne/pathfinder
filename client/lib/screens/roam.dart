@@ -17,10 +17,10 @@ class RoamModeScreen extends StatefulWidget {
 
 class _RoamModeScreenState extends State<RoamModeScreen> {
   CameraController? _controller;
-  final bool _isStreaming = false;
   final SpeechToText _speechToText = SpeechToText();
   bool _isListening = false;
   Timer? _listeningTimer;
+  Timer? _captureTimer;
   List<dynamic>? _recognitions;
 
   @override
@@ -41,6 +41,9 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
 
     await _controller!.initialize();
     setState(() {});
+
+    // Start capturing and sending images every 5 seconds
+    _startCapturing();
   }
 
   Future<void> _initSpeech() async {
@@ -77,6 +80,12 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
     } else if (recognizedWords.contains('navigation')) {
       Navigator.pushNamed(context, '/navigation_mode');
     }
+  }
+
+  void _startCapturing() {
+    _captureTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      _captureAndSendImage();
+    });
   }
 
   Future<void> _captureAndSendImage() async {
@@ -131,74 +140,21 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
                   )
                 : const Center(child: CircularProgressIndicator()),
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton(
-                onPressed: _captureAndSendImage,
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  backgroundColor: const Color(0xFF004D40), // Text color
-                ),
-                child: const Text('Start Streaming'),
+          if (_recognitions != null)
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                'Recognitions: ${_recognitions!.join(', ')}',
+                style: const TextStyle(fontSize: 16, color: Colors.black),
               ),
-              ElevatedButton(
-                onPressed: _stopStreaming,
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  backgroundColor: const Color(0xFF004D40), // Text color
-                ),
-                child: const Text('Stop Streaming'),
-              ),
-            ],
-          ),
+            ),
         ],
       ),
     );
   }
 
   Widget _buildRecognitionResults() {
-    if (_recognitions == null) return Container();
-
-    print("----------- recognitions: $_recognitions");
-
-    return Stack(
-      children: _recognitions!.map((recognition) {
-        final rect = recognition['rect'];
-        final x = double.tryParse(rect['x'].toString()) ?? 0.0;
-        final y = double.tryParse(rect['y'].toString()) ?? 0.0;
-        final w = double.tryParse(rect['w'].toString()) ?? 0.0;
-        final h = double.tryParse(rect['h'].toString()) ?? 0.0;
-
-        return Positioned(
-          left: x * MediaQuery.of(context).size.width,
-          top: y * MediaQuery.of(context).size.height,
-          width: w * MediaQuery.of(context).size.width,
-          height: h * MediaQuery.of(context).size.height,
-          child: Container(
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: Colors.red,
-                width: 3,
-              ),
-            ),
-            child: Text(
-              "${recognition['detectedClass']} ${(recognition['confidenceInClass'] * 100).toStringAsFixed(0)}%",
-              style: const TextStyle(
-                backgroundColor: Colors.red,
-                color: Colors.white,
-                fontSize: 12,
-              ),
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  void _stopStreaming() {
-    // Implement your stop streaming logic here
-    print('Stop streaming');
+    return Container(); // No overlay needed for now
   }
 
   @override
@@ -206,6 +162,7 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
     _controller?.dispose();
     _speechToText.stop();
     _listeningTimer?.cancel();
+    _captureTimer?.cancel();
     super.dispose();
   }
 }

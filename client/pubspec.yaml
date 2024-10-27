@@ -69,8 +69,6 @@ flutter:
   assets:
   - assets/images/logo.jpg
   - assets/campus.json
-  - assets/yolov2_tiny.tflite
-  - assets/yolov2_tiny.txt
   - assets/
 
   # An image asset can refer to one or more resolution-specific "variants", see
