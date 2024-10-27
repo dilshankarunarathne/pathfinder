@@ -5,8 +5,8 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
-import 'package:web_socket_channel/io.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:tflite_flutter/tflite_flutter.dart';
+import 'package:tflite_flutter_helper/tflite_flutter_helper.dart';
 
 class RoamModeScreen extends StatefulWidget {
   const RoamModeScreen({super.key});
@@ -17,18 +17,20 @@ class RoamModeScreen extends StatefulWidget {
 
 class _RoamModeScreenState extends State<RoamModeScreen> {
   CameraController? _controller;
-  late WebSocketChannel _channel;
   bool _isStreaming = false;
   final SpeechToText _speechToText = SpeechToText();
   bool _isListening = false;
   Timer? _listeningTimer;
+  List<dynamic>? _recognitions;
+  Interpreter? _interpreter;
+  late ImageProcessor _imageProcessor;
 
   @override
   void initState() {
     super.initState();
     _initializeCamera();
-    _connectWebSocket();
     _initSpeech();
+    _loadModel();
   }
 
   Future<void> _initializeCamera() async {
@@ -42,13 +44,6 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
 
     await _controller!.initialize();
     setState(() {});
-  }
-
-  void _connectWebSocket() {
-    _channel = IOWebSocketChannel.connect('ws://your_server_url');
-    _channel.stream.listen((message) {
-      // Handle server responses here
-    });
   }
 
   Future<void> _initSpeech() async {
@@ -79,7 +74,7 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
 
   void _onSpeechResult(SpeechRecognitionResult result) {
     final recognizedWords = result.recognizedWords.toLowerCase();
-    print('Recognized words: $recognizedWords');
+    print('-----------------Recognized words: $recognizedWords');
     if (recognizedWords.contains('go back')) {
       Navigator.pop(context);
     } else if (recognizedWords.contains('navigation')) {
@@ -87,24 +82,92 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
     }
   }
 
+  Future<void> _loadModel() async {
+    try {
+      _interpreter = await Interpreter.fromAsset('assets/yolov2_tiny.tflite');
+      _imageProcessor = ImageProcessorBuilder()
+          .add(ResizeOp(416, 416, ResizeMethod.BILINEAR))
+          .build();
+      print('----------------Model loaded');
+    } catch (e) {
+      print('------------------ Failed to load model: $e');
+    }
+  }
+
   Future<void> _startStreaming() async {
     if (!_isStreaming) {
       await _controller!.startImageStream((CameraImage image) async {
-        // Convert image data to a format suitable for sending over WebSocket
-        final bytes = image.planes.fold<Uint8List>(
-          Uint8List(0),
-          (Uint8List previousValue, Plane plane) =>
-              Uint8List.fromList(previousValue + plane.bytes),
-        );
-
-        // Send image data to the server
-        _channel.sink.add(bytes);
+        // Run the model on the image data
+        _runModelOnFrame(image);
       });
 
       setState(() {
         _isStreaming = true;
       });
     }
+  }
+
+  Future<void> _runModelOnFrame(CameraImage image) async {
+    if (_interpreter == null) return;
+
+    // Convert image to input format
+    var input = _preProcessImage(image);
+
+    // Define output buffer
+    var output = List.filled(1 * 13 * 13 * 125, 0.0).reshape([1, 13, 13, 125]);
+
+    // Run inference
+    _interpreter!.run(input.buffer.asUint8List(), output);
+
+    // Process output
+    setState(() {
+      _recognitions = output;
+    });
+  }
+
+  TensorImage _preProcessImage(CameraImage image) {
+    // Convert CameraImage to TensorImage
+    TensorImage tensorImage = _convertCameraImageToTensorImage(image);
+    // Process the image
+    tensorImage = _imageProcessor.process(tensorImage);
+    return tensorImage;
+  }
+
+  TensorImage _convertCameraImageToTensorImage(CameraImage image) {
+    final int width = image.width;
+    final int height = image.height;
+    final int numChannels = image.planes.length;
+
+    // Create a buffer to hold the image data
+    final buffer = Uint8List(width * height * numChannels);
+
+    // Copy the image data into the buffer
+    for (int i = 0; i < numChannels; i++) {
+      final plane = image.planes[i];
+      final bytesPerPixel = plane.bytesPerPixel!;
+      final bytesPerRow = plane.bytesPerRow;
+      final bytes = plane.bytes;
+
+      for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+          final pixelIndex = y * width + x;
+          final byteIndex = y * bytesPerRow + x * bytesPerPixel;
+          buffer[pixelIndex * numChannels + i] = bytes[byteIndex];
+        }
+      }
+    }
+
+    // Create a TensorBuffer from the buffer
+    final tensorBuffer = TensorBuffer.createFixedSize(
+      [1, height, width, numChannels],
+      TfLiteType.uint8,
+    );
+    tensorBuffer.loadBuffer(buffer.buffer);
+
+    // Create a TensorImage from the TensorBuffer
+    final tensorImage = TensorImage.fromTensorBuffer(tensorBuffer);
+
+    return tensorImage;
   }
 
   Future<void> _stopStreaming() async {
@@ -125,7 +188,12 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
           Image.asset('assets/images/logo.jpg'), // Add the logo at the top
           Expanded(
             child: _controller != null && _controller!.value.isInitialized
-                ? CameraPreview(_controller!)
+                ? Stack(
+                    children: [
+                      CameraPreview(_controller!),
+                      _buildRecognitionResults(),
+                    ],
+                  )
                 : const Center(child: CircularProgressIndicator()),
           ),
           Row(
@@ -154,12 +222,43 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
     );
   }
 
+  Widget _buildRecognitionResults() {
+    if (_recognitions == null) return Container();
+
+    return Stack(
+      children: _recognitions!.map((recognition) {
+        return Positioned(
+          left: recognition['rect']['x'] * MediaQuery.of(context).size.width,
+          top: recognition['rect']['y'] * MediaQuery.of(context).size.height,
+          width: recognition['rect']['w'] * MediaQuery.of(context).size.width,
+          height: recognition['rect']['h'] * MediaQuery.of(context).size.height,
+          child: Container(
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: Colors.red,
+                width: 3,
+              ),
+            ),
+            child: Text(
+              "${recognition['detectedClass']} ${(recognition['confidenceInClass'] * 100).toStringAsFixed(0)}%",
+              style: const TextStyle(
+                backgroundColor: Colors.red,
+                color: Colors.white,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
   @override
   void dispose() {
     _controller?.dispose();
-    _channel.sink.close();
     _speechToText.stop();
     _listeningTimer?.cancel();
+    _interpreter?.close();
     super.dispose();
   }
 }
