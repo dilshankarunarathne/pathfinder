@@ -1,10 +1,12 @@
+import cv
 import cv2
 import numpy as np
 from ultralytics import YOLO
+import supervision as sv
 
-from server.static.distances import KNOWN_WIDTHS, FOCAL_LENGTH
+from static.distances import KNOWN_WIDTHS, FOCAL_LENGTH
 
-model = YOLO("server/assets/yolov8n.pt")
+model = YOLO("assets/yolov8n.pt")
 
 classNames = ['person', 'bicycle', 'car', 'motorbike', 'aeroplane', 'bus', 'train', 'truck', 'boat', 'traffic light',
               'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow',
@@ -23,25 +25,34 @@ def calculate_distance(actual_width, object_width_in_image, focal_length):
     return distance
 
 
-def start_stream_capture(frame_data):
-    frame = cv2.imdecode(np.frombuffer(frame_data, np.uint8), -1)
-    results = model(frame, stream=True)
+def start_stream_capture1(frame_data):
+    model = YOLO("assets/yolov8n.pt")
+
+    # Decode the frame data
+    frame = cv2.imdecode(np.frombuffer(frame_data, np.uint8), cv2.IMREAD_COLOR)
+
+    # Ensure the frame is correctly passed to the model
+    results = model(frame)
 
     object_names = []
+    print(object_names)
 
-    # looping through coordinates
+    pred = model(frame, augment=False)[0]
+    print(pred)
+
+    # Loop through the results
     for r in results:
-        boxes = r.boxes  # identifying boxes
+        boxes = r.boxes  # Identifying boxes
 
         for box in boxes:
-            # bounding box
+            # Bounding box
             x1, y1, x2, y2 = box.xyxy[0]
-            x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)  # convert to int values
+            x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)  # Convert to int values
 
             # Width of object in the image (in pixels)
             object_width_in_image = x2 - x1
 
-            cls = int(box.cls[0])  # identifying class name
+            cls = int(box.cls[0])  # Identifying class name
 
             # Get the known width of the object class
             known_width = KNOWN_WIDTHS.get(classNames[cls], None)

@@ -1,12 +1,12 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
-import 'package:tflite_flutter/tflite_flutter.dart';
-import 'package:tflite_flutter_helper/tflite_flutter_helper.dart';
 
 class RoamModeScreen extends StatefulWidget {
   const RoamModeScreen({super.key});
@@ -17,21 +17,17 @@ class RoamModeScreen extends StatefulWidget {
 
 class _RoamModeScreenState extends State<RoamModeScreen> {
   CameraController? _controller;
-  bool _isStreaming = false;
+  final bool _isStreaming = false;
   final SpeechToText _speechToText = SpeechToText();
   bool _isListening = false;
   Timer? _listeningTimer;
-  Timer? _inferenceTimer;
   List<dynamic>? _recognitions;
-  Interpreter? _interpreter;
-  late ImageProcessor _imageProcessor;
 
   @override
   void initState() {
     super.initState();
     _initializeCamera();
     _initSpeech();
-    _loadModel();
   }
 
   Future<void> _initializeCamera() async {
@@ -83,126 +79,39 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
     }
   }
 
-  Future<void> _loadModel() async {
+  Future<void> _captureAndSendImage() async {
+    if (_controller == null || !_controller!.value.isInitialized) {
+      print("Camera is not initialized");
+      return;
+    }
+
     try {
-      _interpreter = await Interpreter.fromAsset('yolov2_tiny.tflite');
-      _imageProcessor = ImageProcessorBuilder()
-          .add(ResizeOp(416, 416, ResizeMethod.BILINEAR))
-          .build();
-      print('----------------Model loaded');
+      final image = await _controller!.takePicture();
+      final bytes = await image.readAsBytes();
+
+      // Send bytes to server
+      await _sendImageToServer(bytes);
     } catch (e) {
-      print('------------------ Failed to load model: $e');
+      print("Error capturing image: $e");
     }
   }
 
-  Future<void> _startStreaming() async {
-    if (!_isStreaming) {
-      await _controller!.startImageStream((CameraImage image) async {
-        // Run the model on the image data
-        if (_inferenceTimer == null || !_inferenceTimer!.isActive) {
-          _inferenceTimer = Timer(const Duration(seconds: 1), () {
-            _runModelOnFrame(image);
-          });
-        }
-      });
+  Future<void> _sendImageToServer(Uint8List bytes) async {
+    final uri = Uri.parse('http://127.0.0.1:8000/predict');
+    final request = http.MultipartRequest('POST', uri)
+      ..files.add(
+          http.MultipartFile.fromBytes('file', bytes, filename: 'frame.jpg'));
 
+    final response = await request.send();
+
+    if (response.statusCode == 200) {
+      final responseData = await response.stream.bytesToString();
+      final decodedData = jsonDecode(responseData);
       setState(() {
-        _isStreaming = true;
+        _recognitions = decodedData['objects'];
       });
-    }
-  }
-
-  Future<void> _runModelOnFrame(CameraImage image) async {
-    print("---------- running model on image ");
-
-    if (_interpreter == null) {
-      print("---------- Model not loaded, trying to load again...");
-      try {
-        _interpreter = await Interpreter.fromAsset('yolov2_tiny.tflite');
-        _imageProcessor = ImageProcessorBuilder()
-            .add(ResizeOp(416, 416, ResizeMethod.BILINEAR))
-            .build();
-        print('----------------Model loaded');
-      } catch (e) {
-        print('------------------ Failed to load model: $e');
-        return;
-      }
-    }
-
-    // Convert image to input format
-    var input = _preProcessImage(image);
-
-    // Define output buffer
-    var output = List.filled(1 * 13 * 13 * 125, 0.0).reshape([1, 13, 13, 125]);
-
-    // Run inference
-    try {
-      _interpreter!.run(input.buffer.asUint8List(), output);
-      print("---------- output: $output");
-    } catch (e) {
-      print("---------- Error during inference: $e");
-    }
-
-    // Process output
-    setState(() {
-      _recognitions = output;
-    });
-  }
-
-  TensorImage _preProcessImage(CameraImage image) {
-    // Convert CameraImage to TensorImage
-    TensorImage tensorImage = _convertCameraImageToTensorImage(image);
-    // Process the image
-    tensorImage = _imageProcessor.process(tensorImage);
-    return tensorImage;
-  }
-
-  TensorImage _convertCameraImageToTensorImage(CameraImage image) {
-    final int width = image.width;
-    final int height = image.height;
-    final int numChannels = image.planes.length;
-
-    // Create a buffer to hold the image data
-    final buffer = Uint8List(width * height * numChannels);
-
-    // Copy the image data into the buffer
-    for (int i = 0; i < numChannels; i++) {
-      final plane = image.planes[i];
-      final bytesPerPixel = plane.bytesPerPixel!;
-      final bytesPerRow = plane.bytesPerRow;
-      final bytes = plane.bytes;
-
-      for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-          final pixelIndex = y * width + x;
-          final byteIndex = y * bytesPerRow + x * bytesPerPixel;
-          if (byteIndex < bytes.length) {
-            buffer[pixelIndex * numChannels + i] = bytes[byteIndex];
-          }
-        }
-      }
-    }
-
-    // Create a TensorBuffer from the buffer
-    final tensorBuffer = TensorBuffer.createFixedSize(
-      [1, height, width, numChannels],
-      TfLiteType.uint8,
-    );
-    tensorBuffer.loadBuffer(buffer.buffer);
-
-    // Create a TensorImage from the TensorBuffer
-    final tensorImage = TensorImage.fromTensorBuffer(tensorBuffer);
-
-    return tensorImage;
-  }
-
-  Future<void> _stopStreaming() async {
-    if (_isStreaming) {
-      await _controller!.stopImageStream();
-
-      setState(() {
-        _isStreaming = false;
-      });
+    } else {
+      print('Failed to send image to server: ${response.statusCode}');
     }
   }
 
@@ -217,7 +126,7 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
                 ? Stack(
                     children: [
                       CameraPreview(_controller!),
-                      // _buildRecognitionResults(),
+                      _buildRecognitionResults(),
                     ],
                   )
                 : const Center(child: CircularProgressIndicator()),
@@ -226,7 +135,7 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               ElevatedButton(
-                onPressed: _startStreaming,
+                onPressed: _captureAndSendImage,
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.white,
                   backgroundColor: const Color(0xFF004D40), // Text color
@@ -287,13 +196,16 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
     );
   }
 
+  void _stopStreaming() {
+    // Implement your stop streaming logic here
+    print('Stop streaming');
+  }
+
   @override
   void dispose() {
     _controller?.dispose();
     _speechToText.stop();
     _listeningTimer?.cancel();
-    _inferenceTimer?.cancel();
-    _interpreter?.close();
     super.dispose();
   }
 }

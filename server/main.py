@@ -1,7 +1,8 @@
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.websockets import WebSocketDisconnect
 
-from server.services.video_stream import start_stream_capture
+from services.video_stream import start_stream_capture1
 
 app = FastAPI()
 
@@ -18,9 +19,9 @@ app.add_middleware(
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     while True:
-        data = await websocket.receive_bytes()
-        object_names = start_stream_capture(data)
-        await websocket.send_text(object_names)
-
-
-app.add_route(auth.router)
+        try:
+            data = await websocket.receive_bytes()
+            object_names = start_stream_capture1(data)
+            await websocket.send_text(object_names)
+        except WebSocketDisconnect:
+            pass

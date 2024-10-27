@@ -40,7 +40,8 @@ dependencies:
   location: ^7.0.1
   http: ^1.2.2
   tflite_flutter: ^0.9.0
-  tflite_flutter_helper: ^0.2.0 # Add this line
+  tflite_flutter_helper: ^0.2.0
+  ffi: ^1.1.2
 
 dev_dependencies:
   flutter_test:
@@ -70,6 +71,7 @@ flutter:
   - assets/campus.json
   - assets/yolov2_tiny.tflite
   - assets/yolov2_tiny.txt
+  - assets/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
