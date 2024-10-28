@@ -23,6 +23,7 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
   bool _isListening = false;
   Timer? _listeningTimer;
   Timer? _responseTimer;
+  Timer? _restartListeningTimer;
   List<dynamic>? _recognitions;
   bool _waitingForResponse = false;
 
@@ -32,6 +33,7 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
     _initializeCamera();
     _initSpeech();
     _initTts();
+    _startListeningLoop();
   }
 
   Future<void> _initializeCamera() async {
@@ -52,6 +54,11 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
 
   Future<void> _initSpeech() async {
     await _speechToText.initialize();
+    _speechToText.statusListener = (status) {
+      if (status == 'notListening' && !_isListening) {
+        _startListening();
+      }
+    };
     _startListening(); // Start listening automatically
   }
 
@@ -78,9 +85,17 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
       setState(() {
         _isListening = false;
       });
-      // Restart listening after a short delay
-      _listeningTimer = Timer(const Duration(seconds: 5), _startListening);
     }
+  }
+
+  void _startListeningLoop() {
+    _restartListeningTimer =
+        Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (_isListening) {
+        _stopListening();
+      }
+      _startListening();
+    });
   }
 
   void _onSpeechResult(SpeechRecognitionResult result) {
@@ -188,6 +203,7 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
     _speechToText.stop();
     _listeningTimer?.cancel();
     _responseTimer?.cancel();
+    _restartListeningTimer?.cancel();
     super.dispose();
   }
 }

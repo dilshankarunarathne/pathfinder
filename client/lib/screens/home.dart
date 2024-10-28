@@ -42,8 +42,6 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         _isListening = false;
       });
-      // Restart listening after a short delay
-      Future.delayed(const Duration(seconds: 1), _startListening);
     }
   }
 
@@ -57,14 +55,18 @@ class _HomeScreenState extends State<HomeScreen> {
       // You need to implement a method to get coordinates from the place name
       final coordinates = _getCoordinatesFromPlaceName(placeName);
       Navigator.pushNamed(context, '/navigation_mode', arguments: coordinates);
+    } else if (recognizedWords.contains('navigation')) {
+      Navigator.pushNamed(context, '/navigation_mode');
     }
+
+    // Restart listening after processing the result
+    _stopListening();
+    Future.delayed(const Duration(seconds: 1), _startListening);
   }
 
-  // Dummy method to get coordinates from place name
-  // You need to implement this method to get actual coordinates
   Map<String, double> _getCoordinatesFromPlaceName(String placeName) {
     // Replace this with actual implementation
-    return {'latitude': 37.7749, 'longitude': -122.4194}; // Example coordinates
+    return {'latitude': 37.7749, 'longitude': -122.4194};
   }
 
   @override
@@ -78,16 +80,16 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.asset(
-              'assets/images/logo.jpg',
-              width: 200, // Increase the width
-              height: 200, // Increase the height
-            ), // Add the logo at the top
+              'assets/images/logo.png',
+              width: 200,
+              height: 200,
+            ),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _isListening ? _stopListening : _startListening,
               style: ElevatedButton.styleFrom(
                 foregroundColor: Colors.white,
-                backgroundColor: const Color(0xFF004D40), // Text color
+                backgroundColor: const Color(0xFF004D40),
               ),
               child: Text(_isListening ? 'Stop Listening' : 'Start Listening'),
             ),
@@ -101,7 +103,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.white,
-                    backgroundColor: const Color(0xFF004D40), // Text color
+                    backgroundColor: const Color(0xFF004D40),
                   ),
                   child: const Text('Roam Mode'),
                 ),
@@ -111,7 +113,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.white,
-                    backgroundColor: const Color(0xFF004D40), // Text color
+                    backgroundColor: const Color(0xFF004D40),
                   ),
                   child: const Text('Navigation Mode'),
                 ),
@@ -120,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: const BottomNavBar(), // Add the BottomNavBar widget
+      bottomNavigationBar: const BottomNavBar(),
     );
   }
 }
