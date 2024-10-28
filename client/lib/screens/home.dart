@@ -45,7 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _onSpeechResult(SpeechRecognitionResult result) {
+  void _onSpeechResult(SpeechRecognitionResult result) async {
     final recognizedWords = result.recognizedWords.toLowerCase();
     print('Recognized words: $recognizedWords');
     if (recognizedWords.contains('camera')) {
@@ -59,9 +59,10 @@ class _HomeScreenState extends State<HomeScreen> {
       Navigator.pushNamed(context, '/navigation_mode');
     }
 
-    // Restart listening after processing the result
+    // Stop listening and wait for 2 seconds before restarting
     _stopListening();
-    Future.delayed(const Duration(seconds: 1), _startListening);
+    await Future.delayed(const Duration(seconds: 2));
+    _startListening();
   }
 
   Map<String, double> _getCoordinatesFromPlaceName(String placeName) {

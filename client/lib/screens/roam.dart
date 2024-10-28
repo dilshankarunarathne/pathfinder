@@ -33,7 +33,6 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
     _initializeCamera();
     _initSpeech();
     _initTts();
-    _startListeningLoop();
   }
 
   Future<void> _initializeCamera() async {
@@ -54,11 +53,6 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
 
   Future<void> _initSpeech() async {
     await _speechToText.initialize();
-    _speechToText.statusListener = (status) {
-      if (status == 'notListening' && !_isListening) {
-        _startListening();
-      }
-    };
     _startListening(); // Start listening automatically
   }
 
@@ -88,24 +82,21 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
     }
   }
 
-  void _startListeningLoop() {
-    _restartListeningTimer =
-        Timer.periodic(const Duration(seconds: 5), (timer) {
-      if (_isListening) {
-        _stopListening();
-      }
-      _startListening();
-    });
-  }
-
-  void _onSpeechResult(SpeechRecognitionResult result) {
+  void _onSpeechResult(SpeechRecognitionResult result) async {
     final recognizedWords = result.recognizedWords.toLowerCase();
-    print('-----------------Recognized words: $recognizedWords');
+    print('Recognized words: $recognizedWords');
     if (recognizedWords.contains('go back')) {
       Navigator.pop(context);
+    } else if (recognizedWords.contains('home')) {
+      Navigator.pushNamed(context, '/');
     } else if (recognizedWords.contains('navigation')) {
       Navigator.pushNamed(context, '/navigation_mode');
     }
+
+    // Stop listening and wait for 2 seconds before restarting
+    _stopListening();
+    await Future.delayed(const Duration(seconds: 2));
+    _startListening();
   }
 
   Future<void> _captureAndSendImage() async {
@@ -148,7 +139,7 @@ class _RoamModeScreenState extends State<RoamModeScreen> {
       final decodedData = jsonDecode(responseData);
       setState(() {
         _recognitions = decodedData['objects'];
-        print('-------------------//--- Recognitions: $responseData');
+        print('Recognitions: $responseData');
         _speakRecognitions();
       });
       _waitingForResponse = false;

@@ -1,4 +1,3 @@
-import 'package:device_preview/device_preview.dart';
 import 'package:flutter/material.dart';
 
 import 'screens/home.dart';
@@ -8,18 +7,7 @@ import 'screens/register.dart';
 import 'screens/roam.dart';
 
 void main() {
-  var devicePre = true;
-
-  // ignore: dead_code
-  if (devicePre) {
-    runApp(DevicePreview(
-      //enabled: !kReleaseMode,
-      builder: (context) => const MyApp(),
-    ));
-    // ignore: dead_code
-  } else {
-    runApp(const MyApp());
-  }
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -32,9 +20,6 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      useInheritedMediaQuery: true,
-      locale: DevicePreview.locale(context),
-      builder: DevicePreview.appBuilder,
       home: const SignInScreen(),
       routes: {
         '/home': (context) => const HomeScreen(),

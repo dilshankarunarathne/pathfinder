@@ -41,63 +41,93 @@ class _NavigationScreenState extends State<NavigationScreen> {
 
   @override
   void initState() {
+    super.initState();
     initialize();
     _initSpeech();
-    super.initState();
   }
 
   Future<void> _initSpeech() async {
-    await _speechToText.initialize();
-    _startListeningLoop(); // Start the listening loop
-  }
-
-  void _startListeningLoop() async {
-    while (mounted) {
-      if (!_isListening) {
-        await _startListening();
+    try {
+      bool available = await _speechToText.initialize();
+      if (available) {
+        _startListening(); // Start listening automatically
+      } else {
+        print("The user has denied the use of speech recognition.");
       }
-      await Future.delayed(const Duration(seconds: 5));
+    } catch (e) {
+      print("Error initializing speech recognition: $e");
     }
   }
 
-  Future<void> _startListening() async {
+  void _startListening() async {
     if (!_isListening) {
-      await _speechToText.listen(onResult: _onSpeechResult);
-      print('Listening...');
-      setState(() {
-        _isListening = true;
-      });
+      try {
+        await _speechToText.listen(
+          onResult: _onSpeechResult,
+          listenFor: const Duration(seconds: 5),
+          pauseFor:
+              const Duration(seconds: 5), // Pause duration between phrases
+        );
+        print('Listening...');
+        setState(() {
+          _isListening = true;
+        });
+      } catch (e) {
+        print("Error starting listening: $e");
+      }
     }
   }
 
-  Future<void> _stopListening() async {
+  void _stopListening() async {
     if (_isListening) {
-      await _speechToText.stop();
-      setState(() {
-        _isListening = false;
-      });
+      try {
+        await _speechToText.stop();
+        setState(() {
+          _isListening = false;
+        });
+      } catch (e) {
+        print("Error stopping listening: $e");
+      }
     }
   }
 
-  void _onSpeechResult(SpeechRecognitionResult result) {
+  void _onSpeechResult(SpeechRecognitionResult result) async {
     final recognizedWords = result.recognizedWords.toLowerCase();
-    print('--------------------Recognized words: $recognizedWords');
-    if (recognizedWords.contains('go back')) {
-      Navigator.pop(context);
-    } else if (recognizedWords.contains('camera')) {
-      Navigator.pushNamed(context, '/roam_mode');
-    } else if (recognizedWords.startsWith('navigate to ')) {
-      final placeName = recognizedWords.replaceFirst('navigate to ', '').trim();
-      print("**********************$placeName");
-      _navigateToPlace(placeName);
+    print('Recognized words: $recognizedWords');
+    try {
+      if (recognizedWords.contains('go back')) {
+        print('-------------------Going back');
+        Navigator.pop(context);
+      } else if (recognizedWords.contains('camera')) {
+        Navigator.pushNamed(context, '/roam_mode');
+      } else if (recognizedWords.contains('home')) {
+        Navigator.pushNamed(context, '/');
+        // } else if (recognizedWords.startsWith('navigate to ')) {
+        //   final placeName =
+        //       recognizedWords.replaceFirst('navigate to ', '').trim();
+        //   print("-----------------------Navigating to: $placeName");
+        //   _navigateToPlace(placeName);
+        // }
+      } else {
+        print('--------------recognized: $recognizedWords');
+        print('----------- navigating to $recognizedWords');
+        _navigateToPlace(recognizedWords.toLowerCase());
+      }
+    } catch (e) {
+      print("Error processing speech result: $e");
     }
+
+    // Stop listening and wait for 2 seconds before restarting
+    _stopListening();
+    await Future.delayed(const Duration(seconds: 2));
+    _startListening();
   }
 
   Future<void> _navigateToPlace(String placeName) async {
-    print("------------------ navigating to place: $placeName");
-    print('----------------Fetching nearby places...');
+    print("Navigating to place: $placeName");
+    print('Fetching nearby places...');
     await _fetchNearbyPlaces();
-    print('------------------Nearby places fetched: $_nearbyPlaces');
+    print('Nearby places fetched: $_nearbyPlaces');
     final place = _nearbyPlaces.firstWhere(
       (place) => place['name'].toLowerCase() == placeName.toLowerCase(),
       orElse: () => {},
@@ -106,12 +136,11 @@ class _NavigationScreenState extends State<NavigationScreen> {
     if (place.isNotEmpty) {
       final double destinationLatitude = place['latitude'];
       final double destinationLongitude = place['longitude'];
-      print(
-          "****----------------- voice command navigation successful $destinationLatitude");
+      print("Voice command navigation successful: $destinationLatitude");
 
       await _startNavigation(destinationLatitude, destinationLongitude);
     } else {
-      print('----------------- Place not found');
+      print('Place not found');
     }
   }
 
@@ -121,7 +150,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
       final data = json.decode(response);
       final features = data['features'] as List<dynamic>;
 
-      print('---------------------------- got Features');
+      print('Got features');
 
       setState(() {
         _nearbyPlaces = features
@@ -147,7 +176,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
         print('Nearby places: $_nearbyPlaces');
       });
     } catch (e) {
-      print(e);
+      print("Error fetching nearby places: $e");
     }
   }
 
@@ -184,12 +213,10 @@ class _NavigationScreenState extends State<NavigationScreen> {
               ),
             ),
           ),
-          // Add any additional navigation controls here (optional)
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Row(
               children: [
-                // Button to start navigation (if needed)
                 ElevatedButton(
                   onPressed: () => _startNavigation(
                       8.655370, 81.21151), // Example coordinates
@@ -200,7 +227,6 @@ class _NavigationScreenState extends State<NavigationScreen> {
                   child: const Text('Start Navigation'),
                 ),
                 const Spacer(),
-                // Additional controls like zoom or map type (optional)
               ],
             ),
           ),
@@ -211,10 +237,8 @@ class _NavigationScreenState extends State<NavigationScreen> {
 
   Future<void> _startNavigation(
       double destinationLatitude, double destinationLongitude) async {
-    // Get the current location
     Location location = Location();
 
-    // Check if location services are enabled
     bool serviceEnabled = await location.serviceEnabled();
     if (!serviceEnabled) {
       serviceEnabled = await location.requestService();
@@ -223,7 +247,6 @@ class _NavigationScreenState extends State<NavigationScreen> {
       }
     }
 
-    // Check for location permissions
     PermissionStatus permissionGranted = await location.hasPermission();
     if (permissionGranted == PermissionStatus.denied) {
       permissionGranted = await location.requestPermission();
@@ -234,7 +257,6 @@ class _NavigationScreenState extends State<NavigationScreen> {
 
     LocationData currentLocation = await location.getLocation();
 
-    // Create WayPoint objects for the current location and the destination
     final start = WayPoint(
       latitude: currentLocation.latitude!,
       longitude: currentLocation.longitude!,
@@ -246,73 +268,76 @@ class _NavigationScreenState extends State<NavigationScreen> {
       name: 'Destination',
     );
 
-    // Implement your navigation logic here
     if (_isMultipleStop) {
       // Add your waypoints logic here for multiple stops
     } else {
-      // Single stop navigation
-      // Use the start and destination WayPoint objects
       await _navigateToDestination(start, destination);
     }
   }
 
-  // Example method to navigate to a destination
   Future<void> _navigateToDestination(
       WayPoint start, WayPoint destination) async {
-    // Implement the actual navigation logic here
     print(
         'Navigating from: ${start.name} (${start.latitude}, ${start.longitude}) to ${destination.name} (${destination.latitude}, ${destination.longitude})');
 
-    // Start navigation using MapBoxNavigation
-    await MapBoxNavigation.instance.startNavigation(
-      wayPoints: [start, destination],
-      options: MapBoxOptions(
-        mode: MapBoxNavigationMode.driving,
-        simulateRoute: false,
-        language: "en",
-        units: VoiceUnits.metric,
-      ),
-    );
+    try {
+      await MapBoxNavigation.instance.startNavigation(
+        wayPoints: [start, destination],
+        options: MapBoxOptions(
+          mode: MapBoxNavigationMode.driving,
+          simulateRoute: false,
+          language: "en",
+          units: VoiceUnits.metric,
+        ),
+      );
+    } catch (e) {
+      print("Error starting navigation: $e");
+    }
   }
 
   Future<void> _onRouteEvent(e) async {
-    _distanceRemaining = await MapBoxNavigation.instance.getDistanceRemaining();
-    _durationRemaining = await MapBoxNavigation.instance.getDurationRemaining();
+    try {
+      _distanceRemaining =
+          await MapBoxNavigation.instance.getDistanceRemaining();
+      _durationRemaining =
+          await MapBoxNavigation.instance.getDurationRemaining();
 
-    switch (e.eventType) {
-      case MapBoxEvent.progress_change:
-        var progressEvent = e.data as RouteProgressEvent;
-        _arrived = progressEvent.arrived!;
-        if (progressEvent.currentStepInstruction != null) {
-          _instruction = progressEvent.currentStepInstruction;
-        }
-        break;
-      case MapBoxEvent.route_building:
-      case MapBoxEvent.route_built:
-        _routeBuilt = true;
-        break;
-      case MapBoxEvent.route_build_failed:
-        _routeBuilt = false;
-        break;
-      case MapBoxEvent.navigation_running:
-        _isNavigating = true;
-        break;
-      case MapBoxEvent.on_arrival:
-        _arrived = true;
-        if (!_isMultipleStop) {
-          await Future.delayed(const Duration(seconds: 3));
-          await _controller?.finishNavigation();
-        }
-        break;
-      case MapBoxEvent.navigation_finished:
-      case MapBoxEvent.navigation_cancelled:
-        _routeBuilt = false;
-        _isNavigating = false;
-        break;
-      default:
-        break;
+      switch (e.eventType) {
+        case MapBoxEvent.progress_change:
+          var progressEvent = e.data as RouteProgressEvent;
+          _arrived = progressEvent.arrived!;
+          if (progressEvent.currentStepInstruction != null) {
+            _instruction = progressEvent.currentStepInstruction;
+          }
+          break;
+        case MapBoxEvent.route_building:
+        case MapBoxEvent.route_built:
+          _routeBuilt = true;
+          break;
+        case MapBoxEvent.route_build_failed:
+          _routeBuilt = false;
+          break;
+        case MapBoxEvent.navigation_running:
+          _isNavigating = true;
+          break;
+        case MapBoxEvent.on_arrival:
+          _arrived = true;
+          if (!_isMultipleStop) {
+            await Future.delayed(const Duration(seconds: 3));
+            await _controller?.finishNavigation();
+          }
+          break;
+        case MapBoxEvent.navigation_finished:
+        case MapBoxEvent.navigation_cancelled:
+          _routeBuilt = false;
+          _isNavigating = false;
+          break;
+        default:
+          break;
+      }
+      setState(() {});
+    } catch (e) {
+      print("Error handling route event: $e");
     }
-    //refresh UI
-    setState(() {});
   }
 }
